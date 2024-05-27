@@ -9,6 +9,7 @@ from matplotlib import cm
 class ImageProcessor:
     # Initializes the Image Processor
     def __init__(self, image_count=100):
+        self.x_prev_values = None
         self.image_count = image_count  # Initialize with the number of images to import
         self.original_images = self.import_images() # Import images and store them in the original_images list
         self.min_rows, self.min_cols = self.find_min_size(self.original_images) # Find the smallest dimensions across all images for consistent resizing
@@ -135,10 +136,14 @@ class ImageProcessor:
         return np.array([image.flatten() for image in images])
 
     # Perform Singular Value Decomposition (SVD) on the data matrix
-    @staticmethod
-    def compute_svd(X, plot=None):
+    def compute_svd(self, X, plot=None):
+        if X is not None:
+            self.x_prev_values = X
+        else:
+            X = self.x_prev_values
         U, S, VT = np.linalg.svd(X, full_matrices=False)
         print(f"X: {X.shape}\nU: {U.shape}\nSigma: {S.shape}\nV^T: {VT.shape}")
+        
         if (plot):
             plt.plot(S, 'ro')
             plt.show()
@@ -184,8 +189,10 @@ class UI:
         ttk.Button(self.frm, text="Delete Image 2", command=self.delete_image2).grid(column=2, row=3)
 
         # 5th row
-        ttk.Button(self.frm, text="Show Reconstructed Images", command=self.show_reconstructed_images).grid(column=0, row=4)
-        ttk.Button(self.frm, text="Show Reconstructed Gifs", command=self.show_reconstructed_gifs).grid(column=1, row=4)
+        ttk.Button(self.frm, text="Show 'SVD'", command=self.show_svd_parameters).grid(column=0, row=4)
+        ttk.Button(self.frm, text="Show Graph", command=self.show_reconstructed_images).grid(column=1, row=4)
+        ttk.Button(self.frm, text="Show Reconstructed Images", command=self.show_reconstructed_images).grid(column=2, row=4)
+        ttk.Button(self.frm, text="Show Reconstructed Gifs", command=self.show_reconstructed_gifs).grid(column=3, row=4)
 
         # 6th row
         ttk.Button(self.frm, text="Quit", command=self.root.destroy).grid(column=4, row=5)
@@ -201,12 +208,14 @@ class UI:
             new_image = self.image_processor.add_image(file_path)
             new_image = self.array_to_photoimage(new_image)
             self.image_label1.configure(image=new_image)
+            self.images["image1"] = new_image # Keep references to avoid garbage collection
     def upload_image2(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp")])
         if file_path:
             new_image = self.image_processor.add_image(file_path)
             new_image = self.array_to_photoimage(new_image)
             self.image_label2.configure(image=new_image)
+            self.images["image2"] = new_image # Keep references to avoid garbage collection
 
     # Function to delete an Image
     def delete_image1(self, number=1):
@@ -234,9 +243,13 @@ class UI:
         # Convert PIL Image to PhotoImage
         return ImageTk.PhotoImage(pil_image)
 
+    # Calls the SVD curve
+    def show_svd_parameters(self):
+        self.image_processor.compute_svd(None, True)
+
     # Calls the reconstructed_images function of the image_processor
     def show_reconstructed_images(self):
-        self.image_processor.plot_reconstructed_images()
+        self.image_processor.plot_reconstructed_images(True)
 
     # Calls the show_reconstructed_gifs function of the image_processor
     def show_reconstructed_gifs(self):
