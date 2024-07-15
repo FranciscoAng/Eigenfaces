@@ -160,9 +160,6 @@ cython_debug/
 #.idea/
 
 
-#Custom folders
-/rawdata
-
-#Custom files
-res1.gif
-res2.gif
+# Data inside folders
+/assets/rawdata/*
+/assets/output/*
