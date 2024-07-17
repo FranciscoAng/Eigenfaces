@@ -27,7 +27,7 @@ class ImageProcessor:
         images = []
         for i in np.random.randint(1223, 5222, self.image_count): # Import a random selection of images based on the specified count
             try:
-                img = np.fromfile(f"rawdata/rawdata/{i}", dtype=np.uint8).reshape((128, 128))   # Read the image file and reshape it to 128x128 pixels
+                img = np.fromfile(f"assets/rawdata/{i}", dtype=np.uint8).reshape((128, 128))   # Read the image file and reshape it to 128x128 pixels
                 images.append(img)
             except:
                 pass    # Skip files that cannot be read or reshaped
@@ -191,8 +191,8 @@ class UI:
         ttk.Button(self.frm, text="Upload Image 2", command=self.upload_image2).grid(column=2, row=1)
 
         # 3rd row
-        self.image_blank = ImageTk.PhotoImage(Image.open("blank_image.jpg"))
-        self.image_result = ImageTk.PhotoImage(Image.open("blank_result.jpg"))
+        self.image_blank = ImageTk.PhotoImage(Image.open("assets/blank_image.jpg"))
+        self.image_result = ImageTk.PhotoImage(Image.open("assets/blank_result.jpg"))
         
         self.image_label1 = ttk.Label(self.frm, image=self.image_blank)
         self.image_label1.grid(column= 1, row=2)
@@ -247,12 +247,12 @@ class UI:
 
     # Function to delete an Image
     def delete_image1(self, number=1):
-        self.image_blank = ImageTk.PhotoImage(Image.open("blank_image.jpg"))
+        self.image_blank = ImageTk.PhotoImage(Image.open("assets/blank_image.jpg"))
         self.image_label1.configure(image=self.image_blank)
         self.image_processor.remove_image(number)
         self.image1_uploded = False
     def delete_image2(self, number=2):
-        self.image_blank = ImageTk.PhotoImage(Image.open("blank_image.jpg"))
+        self.image_blank = ImageTk.PhotoImage(Image.open("assets/blank_image.jpg"))
         self.image_label2.configure(image=self.image_blank)
         self.image_processor.remove_image(number)
         self.image2_uploded = False

@@ -6,14 +6,15 @@ import sys
 import numpy as np
 from PIL import Image
 
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 #from matplotlib import cm
 
 ####
 ## Global variables
 ####
 
-DATASET_DIR = "rawdata/"
+DATASET_DIR = "assets/rawdata/"
+OUTPUT_DIR = "assets/output/"
 IMAGE_COUNT = 3000
 N_COMPONENTS = 200
 
@@ -47,17 +48,22 @@ class ImageProcessor:
         return image[top:bot, left:right]
 
     ## Import an image from the given path
-    def import_image(self, file_path : str) -> np.ndarray:
+    def import_image(self, file_path : str, is_dataset = True) -> np.ndarray:
         try:
-            img = np.fromfile(file_path, dtype=np.uint8).reshape((128, 128))
+            if is_dataset:
+                img = np.fromfile(file_path, dtype=np.uint8).reshape((128, 128))
+            else:
+                img = Image.open(file_path).convert("L").resize((self.min_rows, self.min_cols))
+                img = self.recenter(np.array(img, dtype= np.uint8))
             return img
-        except:
+        except Exception as e:
+            print(e)
             pass
     
     ## Import the dataset
-    def get_dataset(self):
+    def get_dataset(self, dataset_dir : str):
         original_images = list(map(
-            lambda i : self.import_image(DATASET_DIR + str(i))
+            lambda i : self.import_image(dataset_dir + str(i))
             ,np.random.randint(1223, 5222, IMAGE_COUNT)))
         
         # Remove None values
@@ -126,7 +132,7 @@ class ImageProcessor:
     def reconstruct_from_V(self,
                          target,
                          components,
-                         name="res.gif",
+                         name = OUTPUT_DIR + "res.gif",
                          t = 100):
         
         #Arreglo para guardar la animacion
@@ -155,15 +161,15 @@ class ImageProcessor:
                         target1,
                         target2,
                         components,
-                        name="res.gif",
+                        name = OUTPUT_DIR + "res.gif",
                         t = 100):
         values1, residuals1, rank1, singular1 = np.linalg.lstsq(self.V[:,:components],
                                                             target1 - self.meanFace,
-                                                            rcond=None)
+                                                            rcond = None)
         
         values2, residuals2, rank2, singular2 = np.linalg.lstsq(self.V[:,:components],
                                                             target2 - self.meanFace,
-                                                            rcond=None)
+                                                            rcond = None)
         frames = []
         for f in range(1, 101):
             blend = f/100
@@ -181,3 +187,7 @@ class ImageProcessor:
                        duration=t,
                        loop=0,
                        save_all=True, append_images=frames[1:], optimize=False)
+        
+        print(residuals1)
+
+        return name
