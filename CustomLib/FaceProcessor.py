@@ -5,6 +5,7 @@
 import sys
 import numpy as np
 from PIL import Image
+from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 #from matplotlib import cm
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 DATASET_DIR = "assets/rawdata/"
 OUTPUT_DIR = "assets/output/"
 IMAGE_COUNT = 3000
-N_COMPONENTS = 200
+N_COMPONENTS = 1000
 
 ####
 ## Class definition
@@ -160,9 +161,9 @@ class ImageProcessor:
     def blend_images(self,
                         target1,
                         target2,
-                        components,
+                        components = N_COMPONENTS,
                         name = OUTPUT_DIR + "res.gif",
-                        t = 100):
+                        t = 50):
         values1, residuals1, rank1, singular1 = np.linalg.lstsq(self.V[:,:components],
                                                             target1 - self.meanFace,
                                                             rcond = None)
@@ -171,8 +172,9 @@ class ImageProcessor:
                                                             target2 - self.meanFace,
                                                             rcond = None)
         frames = []
-        for f in range(1, 101):
-            blend = f/100
+        #for f in range(1, 101):
+            #blend = f/100
+        for blend in tqdm(np.linspace(0,1,100)):
             # Get eigenvalues by solving V @ U = Target
             reconstruct = self.V[:,:components] @ ( blend * values1 + ( 1 - blend) * values2)
             # Image as squared array

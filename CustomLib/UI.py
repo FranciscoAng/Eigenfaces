@@ -1,7 +1,7 @@
 from CustomLib.FaceProcessor import ImageProcessor
 
 import tkinter as tk
-from tkinter import ttk, filedialog, Label
+from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import numpy as np
 
@@ -30,6 +30,12 @@ class UI:
         }
         self.squared_error = None
 
+        #Top menu
+        menubar = tk.Menu(self.root)
+        menubar.add_command(label="Load dataset", command=self.load_data)
+
+        self.root.config(menu=menubar)
+
         # 1st row
         ttk.Label(self.frm, text="Face Morpher V1").grid(column=0, row=0)
 
@@ -43,12 +49,17 @@ class UI:
         self.image_label3.grid(column= 4, row=2)
 
         # 2nd row
-        ttk.Button(self.frm, text="Upload Image 1",
-                   command = lambda: self.upload_image("image1", self.image_label1)
-                   ).grid(column=1, row=1)
-        ttk.Button(self.frm, text="Upload Image 2",
-                   command = lambda: self.upload_image("image2", self.image_label2)
-                   ).grid(column=2, row=1)
+        self.btn_upload1 = ttk.Button(self.frm,
+                                      text="Upload Image 1",
+                                      command = lambda: self.upload_image("image1", self.image_label1),
+                                      state="disabled")
+        self.btn_upload1.grid(column=1, row=1)
+        #self.btn_upload1.config(state= tk.DISABLED)
+        self.btn_upload2 = ttk.Button(self.frm,
+                                      text="Upload Image 2",
+                                      command = lambda: self.upload_image("image2", self.image_label2),
+                                      state="disabled")
+        self.btn_upload2.grid(column=2, row=1)
 
         # 4th row
         ttk.Button(self.frm, text="Delete Image 1",
@@ -72,30 +83,6 @@ class UI:
         self.root.mainloop()
 
     # Function to upload an Image
-    def upload_image1(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp")])
-        if file_path and self.images["image1"] is None:
-            new_image = self.image_processor.import_image(file_path, is_dataset=False)
-            if new_image is None:
-                return
-            
-            self.images["image1"] = new_image
-            new_image = self.array_to_photoimage(new_image)
-            self.image_label1.configure(image = self.images["image1"])
-            #self.images["image1"] = new_image # Keep references to avoid garbage collection
-            #self.image1_uploded = True
-
-    
-    def upload_image2(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp")])
-        if file_path and self.images["image2"] is None:
-            new_image = self.image_processor.import_image(file_path)
-            new_image = self.array_to_photoimage(new_image)
-            self.image_label2.configure(image=new_image)
-            self.images["image2"] = new_image # Keep references to avoid garbage collection
-            #self.image2_uploded = True
-
-    # Function to upload an Image
     def upload_image(self, image_dict : str, lbl_display : tk.Label):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp")])
         #if file_path and img_data is None:
@@ -112,19 +99,6 @@ class UI:
         lbl_display.configure(image = disp_img)
         lbl_display.image = disp_img
         print(self.images[image_dict])
-
-    # Function to delete an Image
-    def delete_image1(self, number=1):
-        #self.image_blank = ImageTk.PhotoImage(Image.open("assets/blank_image.jpg"))
-        self.image_label1.configure(image = self.image_blank)
-        self.images["image1"] = None
-        #self.image_processor.remove_image(number)
-        #self.image1_uploded = False
-    def delete_image2(self, number=2):
-        #self.image_blank = ImageTk.PhotoImage(Image.open("assets/blank_image.jpg"))
-        self.image_label2.configure(image = self.image_blank)
-        #self.image_processor.remove_image(number)
-        #self.image2_uploded = False
 
     def delete_image(self, dict_idx : str, lbl_display: ttk.Label):
         lbl_display.configure(image = self.image_blank)
@@ -161,7 +135,7 @@ class UI:
     # Calls the show_reconstructed_gifs function of the image_processor
     def show_reconstructed_gifs(self):
         if self.images["image1"] is not None and self.images["image2"] is not None:
-            self.gif_path = self.image_processor.blend_images(self.images["image1"], self.images["image2"], 1000)
+            self.gif_path = self.image_processor.blend_images(self.images["image1"], self.images["image2"])
         else:
             return
         self.gif = Image.open(self.gif_path)
@@ -185,3 +159,14 @@ class UI:
         ind = (ind + 1) % self.frame_count  # Loop back to the first frame after the last frame
         self.image_label3.configure(image=frame)
         self.root.after(100, self.update_frame, ind)  # Use self.root instead of window
+
+    def load_data(self):
+        file_path = filedialog.askdirectory()
+        if not file_path:
+            return
+        self.image_processor.get_dataset(file_path + "/")
+        self.image_processor.compute_mean()
+        self.image_processor.compute_eigV()
+        
+        self.btn_upload1.config(state= tk.NORMAL)
+        self.btn_upload2.config(state= tk.NORMAL)
